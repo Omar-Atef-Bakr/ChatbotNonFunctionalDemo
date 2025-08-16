@@ -149,7 +149,7 @@
 
         .chatbot-controls {
             display: flex;
-            gap: 10px;
+            gap: 8px;
         }
 
         .control-btn {
@@ -168,6 +168,98 @@
 
         .control-btn:hover {
             background: rgba(255,255,255,0.3);
+        }
+
+        /* Chat History Panel */
+        .chat-history-panel {
+            position: absolute;
+            top: 60px;
+            right: 0;
+            width: 280px;
+            max-height: 400px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+            display: none;
+            flex-direction: column;
+            z-index: 1002;
+        }
+
+        .chat-history-header {
+            padding: 15px 20px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chat-history-header h4 {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .new-chat-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .new-chat-btn:hover {
+            background: #5a67d8;
+        }
+
+        .chat-history-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+        }
+
+        .chat-history-item {
+            padding: 12px 15px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: background 0.2s;
+            border: 1px solid transparent;
+        }
+
+        .chat-history-item:hover {
+            background: #f8f9fa;
+            border-color: #e9ecef;
+        }
+
+        .chat-history-item.active {
+            background: #e7f3ff;
+            border-color: #667eea;
+        }
+
+        .chat-preview-title {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 4px;
+        }
+
+        .chat-preview-text {
+            font-size: 0.75rem;
+            color: #666;
+            line-height: 1.3;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .chat-preview-date {
+            font-size: 0.7rem;
+            color: #999;
+            margin-top: 4px;
         }
 
         .chatbot-messages {
@@ -454,12 +546,26 @@
         <div class="chatbot-header">
             <h3>AI Email Assistant</h3>
             <div class="chatbot-controls">
+                <button class="control-btn" onclick="toggleChatHistory()" title="Chat History">
+                    <span style="font-size: 12px;">☰</span>
+                </button>
                 <button class="control-btn" onclick="maximizeChatbot()" title="Maximize">
                     <span style="font-size: 12px;">⛶</span>
                 </button>
                 <button class="control-btn" onclick="closeChatbot()" title="Close">
                     <span style="font-size: 12px;">✕</span>
                 </button>
+            </div>
+        </div>
+        
+        <!-- Chat History Panel -->
+        <div class="chat-history-panel" id="chatHistoryPanel">
+            <div class="chat-history-header">
+                <h4>Chat History</h4>
+                <button class="new-chat-btn" onclick="startNewChat()">New Chat</button>
+            </div>
+            <div class="chat-history-list" id="chatHistoryList">
+                <!-- Chat history items will be populated by JavaScript -->
             </div>
         </div>
         
@@ -484,7 +590,6 @@
             <div class="oauth-header">
                 <h2>Azure Active Directory</h2>
                 <p>Sign in to your account</p>
-                <p>This section will redirect to azure (microsoft) authentication in the real implementation but it should be as simple as entering you credentials</p>
             </div>
             <form class="oauth-form" onsubmit="handleOAuthSubmit(event)">
                 <div class="form-group">
@@ -504,8 +609,148 @@
         let isAuthenticated = false;
         let isMaximized = false;
         let isProcessing = false;
+        let currentChatId = null;
+        let chatHistory = [];
+
+        // Hardcoded chat history for demo
+        const sampleChats = [
+            {
+                id: 'chat-1',
+                title: 'Client Follow-ups',
+                date: '2 hours ago',
+                messages: [
+                    { type: 'user', content: 'Can you help me follow up on the pending client emails?' },
+                    { type: 'bot', content: 'I found 3 clients waiting for responses. Johnson & Co is the most urgent - they sent a follow-up about the quarterly review meeting yesterday. Would you like me to draft a response?' },
+                    { type: 'user', content: 'Yes, please draft a response for Johnson & Co' },
+                    { type: 'bot', content: 'I\'ve drafted a professional response acknowledging their follow-up and confirming availability for next week\'s quarterly review. The email maintains a courteous tone and includes suggested meeting times. Would you like me to show you the draft?' }
+                ]
+            },
+            {
+                id: 'chat-2',
+                title: 'Contract Renewals',
+                date: 'Yesterday',
+                messages: [
+                    { type: 'user', content: 'What contract renewals are coming up?' },
+                    { type: 'bot', content: 'I found 2 contract renewals due next week: TechCorp\'s annual service agreement (expires March 15th) and GlobalSoft\'s maintenance contract (expires March 18th). Both clients have been sent initial renewal notices.' },
+                    { type: 'user', content: 'Have they responded to the renewal notices?' },
+                    { type: 'bot', content: 'TechCorp confirmed they want to renew with the same terms. GlobalSoft requested a call to discuss updating their package. I can schedule that call if you\'d like.' }
+                ]
+            },
+            {
+                id: 'chat-3',
+                title: 'Email Organization',
+                date: '3 days ago',
+                messages: [
+                    { type: 'user', content: 'My inbox is getting cluttered. Can you help organize it?' },
+                    { type: 'bot', content: 'I\'ve analyzed your inbox and can categorize 127 emails into: 23 client communications, 18 internal team updates, 31 vendor notifications, 28 marketing emails, and 27 automated system alerts. Would you like me to create folders and move them?' },
+                    { type: 'user', content: 'Yes, that would be great. Also set up filters for future emails' },
+                    { type: 'bot', content: 'Perfect! I\'ve organized your emails into appropriate folders and created smart filters. Marketing emails will auto-archive, system alerts will go to a separate folder, and client emails will stay in your main inbox with high priority flagging.' }
+                ]
+            }
+        ];
+
+        // Initialize chat history
+        function initializeChatHistory() {
+            chatHistory = [...sampleChats];
+            populateChatHistory();
+        }
+
+        function toggleChatHistory() {
+            const panel = document.getElementById('chatHistoryPanel');
+            const isVisible = panel.style.display === 'flex';
+            panel.style.display = isVisible ? 'none' : 'flex';
+        }
+
+        function populateChatHistory() {
+            const listContainer = document.getElementById('chatHistoryList');
+            listContainer.innerHTML = '';
+
+            chatHistory.forEach(chat => {
+                const chatItem = document.createElement('div');
+                chatItem.className = `chat-history-item ${chat.id === currentChatId ? 'active' : ''}`;
+                chatItem.onclick = () => loadChat(chat.id);
+                
+                const lastMessage = chat.messages[chat.messages.length - 1];
+                
+                chatItem.innerHTML = `
+                    <div class="chat-preview-title">${chat.title}</div>
+                    <div class="chat-preview-text">${lastMessage.content}</div>
+                    <div class="chat-preview-date">${chat.date}</div>
+                `;
+                
+                listContainer.appendChild(chatItem);
+            });
+        }
+
+        function loadChat(chatId) {
+            const chat = chatHistory.find(c => c.id === chatId);
+            if (!chat) return;
+
+            currentChatId = chatId;
+            
+            // Clear current messages
+            const messagesContainer = document.getElementById('chatbotMessages');
+            messagesContainer.innerHTML = '';
+            
+            // Hide auth message and show input if not already
+            const authMessage = document.getElementById('authMessage');
+            const inputContainer = document.getElementById('chatbotInput');
+            // if (document.getElementById('authMessage')?.style?.display){
+            //     console.log("log:", document.getElementById('authMessage'))
+            //     document.getElementById('authMessage')?.style?.display = 'none';
+            // } 
+            inputContainer?.classList?.remove('hidden');
+            isAuthenticated = true;
+            
+            // Load previous messages
+            chat.messages.forEach(message => {
+                addMessage(message.type, message.content);
+            });
+            
+            // Update chat history UI
+            populateChatHistory();
+            
+            // Close chat history panel
+            document.getElementById('chatHistoryPanel').style.display = 'none';
+        }
 
         function toggleChatbot() {
+            const container = document.getElementById('chatbotContainer');
+            if (container.style.display === 'none' || !container.style.display) {
+                container.style.display = 'flex';
+            } else {
+                container.style.display = 'none';
+            }
+        }
+
+        function startNewChat() {
+            currentChatId = null;
+            
+            // Clear messages
+            const messagesContainer = document.getElementById('chatbotMessages');
+            messagesContainer.innerHTML = '';
+            
+            // If authenticated, show welcome message, otherwise show auth
+            if (isAuthenticated) {
+                addMessage('bot', 'Hello! I\'m ready to help you with your emails. What can I assist you with today?');
+                document.getElementById('chatbotInput').classList.remove('hidden');
+                // if (document.getElementById('authMessage')?.style?.display){
+                //     document.getElementById('authMessage')?.style?.display = 'none';
+                // }
+            } else {
+                // Show auth message
+                const authMessage = document.getElementById('authMessage');
+                const inputContainer = document.getElementById('chatbotInput');
+                authMessage.style.display = 'block';
+                inputContainer.classList.add('hidden');
+            }
+            
+            // Update chat history UI
+            populateChatHistory();
+            
+            // Close chat history panel
+            document.getElementById('chatHistoryPanel').style.display = 'none';
+        
             const container = document.getElementById('chatbotContainer');
             if (container.style.display === 'none' || !container.style.display) {
                 container.style.display = 'flex';
@@ -701,6 +946,21 @@
 
         // Initialize
         document.addEventListener('DOMContentLoaded', function() {
+            // Initialize chat history
+            initializeChatHistory();
+            
+            // Close chat history when clicking outside
+            document.addEventListener('click', function(event) {
+                const historyPanel = document.getElementById('chatHistoryPanel');
+                const historyButton = event.target.closest('.control-btn');
+                
+                if (historyPanel.style.display === 'flex' && 
+                    !historyPanel.contains(event.target) && 
+                    (!historyButton || historyButton.title !== 'Chat History')) {
+                    historyPanel.style.display = 'none';
+                }
+            });
+            
             // Auto-open chatbot after 3 seconds for demo purposes
             setTimeout(() => {
                 if (document.getElementById('chatbotContainer').style.display !== 'flex') {
