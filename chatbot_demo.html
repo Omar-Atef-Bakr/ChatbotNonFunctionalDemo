@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Business Website - AI Assistant Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f8f9fa;
+        }
+
+        /* Main Website Content */
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 60px 0;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            margin-bottom: 20px;
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .content {
+            padding: 80px 0;
+        }
+
+        .content h2 {
+            font-size: 2.5rem;
+            margin-bottom: 30px;
+            color: #2c3e50;
+        }
+
+        .content p {
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+            color: #666;
+        }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 40px;
+            margin: 60px 0;
+        }
+
+        .feature {
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .feature h3 {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            color: #2c3e50;
+        }
+
+        /* Chatbot Float Button */
+        .chatbot-float {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4);
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .chatbot-float:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 25px rgba(102, 126, 234, 0.6);
+        }
+
+        .chatbot-float svg {
+            width: 30px;
+            height: 30px;
+            fill: white;
+        }
+
+        /* Chatbot Interface */
+        .chatbot-container {
+            position: fixed;
+            bottom: 100px;
+            right: 20px;
+            width: 350px;
+            height: 500px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+            display: none;
+            flex-direction: column;
+            z-index: 1001;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .chatbot-container.maximized {
+            top: 20px;
+            left: 20px;
+            right: 20px;
+            bottom: 20px;
+            width: auto;
+            height: auto;
+        }
+
+        .chatbot-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chatbot-header h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .chatbot-controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        .control-btn {
+            width: 25px;
+            height: 25px;
+            border: none;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+
+        .control-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .chatbot-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .message {
+            max-width: 80%;
+            padding: 12px 16px;
+            border-radius: 18px;
+            word-wrap: break-word;
+        }
+
+        .message.bot {
+            background: #f1f3f4;
+            color: #333;
+            align-self: flex-start;
+        }
+
+        .message.user {
+            background: #667eea;
+            color: white;
+            align-self: flex-end;
+        }
+
+        .auth-message {
+            text-align: center;
+            padding: 30px 20px;
+        }
+
+        .auth-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background 0.3s;
+            margin-top: 15px;
+        }
+
+        .auth-btn:hover {
+            background: #5a67d8;
+        }
+
+        .chatbot-input {
+            padding: 15px 20px;
+            border-top: 1px solid #eee;
+            display: flex;
+            gap: 10px;
+        }
+
+        .chatbot-input input {
+            flex: 1;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 25px;
+            outline: none;
+            font-size: 0.9rem;
+        }
+
+        .chatbot-input input:focus {
+            border-color: #667eea;
+        }
+
+        .send-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 16px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .send-btn:hover {
+            background: #5a67d8;
+        }
+
+        .send-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        /* Typing Animation */
+        .typing-indicator {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 12px 16px;
+            background: #f1f3f4;
+            border-radius: 18px;
+            align-self: flex-start;
+            max-width: 80px;
+        }
+
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #999;
+            animation: typing 1.5s infinite;
+        }
+
+        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes typing {
+            0%, 60%, 100% { opacity: 0.3; transform: scale(0.8); }
+            30% { opacity: 1; transform: scale(1); }
+        }
+
+        /* Status Message */
+        .status-message {
+            font-size: 0.8rem;
+            color: #666;
+            text-align: center;
+            padding: 5px 16px;
+            font-style: italic;
+        }
+
+        /* OAuth Modal */
+        .oauth-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.7);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+
+        .oauth-content {
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            max-width: 400px;
+            width: 90%;
+        }
+
+        .oauth-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .oauth-header h2 {
+            color: #0078d4;
+            margin-bottom: 10px;
+        }
+
+        .oauth-form .form-group {
+            margin-bottom: 20px;
+        }
+
+        .oauth-form label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+
+        .oauth-form input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+
+        .oauth-form input:focus {
+            border-color: #0078d4;
+            outline: none;
+        }
+
+        .oauth-submit {
+            width: 100%;
+            background: #0078d4;
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 5px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .oauth-submit:hover {
+            background: #106ebe;
+        }
+
+        /* Streaming text animation */
+        .streaming-text {
+            overflow: hidden;
+            white-space: pre-wrap;
+        }
+
+        .cursor {
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            50% { opacity: 0; }
+        }
+
+        /* Hidden class */
+        .hidden {
+            display: none !important;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .chatbot-container {
+                width: calc(100vw - 40px);
+                right: 20px;
+                left: 20px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .content h2 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Main Website Content -->
+    <div class="header">
+        <div class="container">
+            <h1>Your Business Solutions</h1>
+            <p>Empowering businesses with intelligent automation and AI-driven insights</p>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="content">
+            <h2>Welcome to Our Platform</h2>
+            <p>Experience the future of business automation with our cutting-edge AI assistant. Our platform seamlessly integrates with your existing email infrastructure to provide intelligent, context-aware responses and automation.</p>
+            
+            <p>Our AI-powered chatbot revolutionizes how you manage customer communications, streamline workflows, and enhance productivity. With advanced natural language processing and machine learning capabilities, we deliver personalized experiences that scale with your business needs.</p>
+
+            <div class="features">
+                <div class="feature">
+                    <h3>Email Integration</h3>
+                    <p>Seamlessly connect with your existing email systems including Outlook, Gmail, and custom SMTP servers. Our secure OAuth2 integration ensures your data remains protected while providing powerful automation capabilities.</p>
+                </div>
+                
+                <div class="feature">
+                    <h3>Intelligent Responses</h3>
+                    <p>Leverage advanced AI models to generate contextually relevant responses based on your email history, customer data, and business rules. Reduce response times and improve customer satisfaction.</p>
+                </div>
+                
+                <div class="feature">
+                    <h3>Custom Workflows</h3>
+                    <p>Create sophisticated automation workflows that adapt to your business processes. From simple auto-responses to complex multi-step customer journey management, our platform handles it all.</p>
+                </div>
+            </div>
+
+            <p>Get started today and discover how our AI assistant can transform your business communications. Click on the chat icon in the bottom right corner to experience our demo and see the power of AI-driven customer engagement.</p>
+
+            <p>Our enterprise-grade security ensures that all your data is encrypted and processed according to the highest industry standards. We comply with GDPR, CCPA, and other major privacy regulations to keep your business and customer data safe.</p>
+        </div>
+    </div>
+
+    <!-- Floating Chatbot Button -->
+    <div class="chatbot-float" onclick="toggleChatbot()">
+        <svg viewBox="0 0 24 24">
+            <path d="M12 2C6.48 2 2 6.48 2 12c0 1.54.36 2.98.97 4.29L1 23l6.71-1.97C9.02 21.64 10.46 22 12 22c5.52 0 10-4.48 10-10S17.52 2 12 2zm-1 14h-2v-2h2v2zm0-4h-2V8h2v4z"/>
+        </svg>
+    </div>
+
+    <!-- Chatbot Interface -->
+    <div class="chatbot-container" id="chatbotContainer">
+        <div class="chatbot-header">
+            <h3>AI Email Assistant</h3>
+            <div class="chatbot-controls">
+                <button class="control-btn" onclick="maximizeChatbot()" title="Maximize">
+                    <span style="font-size: 12px;">⛶</span>
+                </button>
+                <button class="control-btn" onclick="closeChatbot()" title="Close">
+                    <span style="font-size: 12px;">✕</span>
+                </button>
+            </div>
+        </div>
+        
+        <div class="chatbot-messages" id="chatbotMessages">
+            <div class="auth-message" id="authMessage">
+                <p>Welcome! To get started, I need to access your mailbox to provide personalized assistance.</p>
+                <button class="auth-btn" onclick="showOAuthModal()">Click here to authenticate your mailbox</button>
+            </div>
+        </div>
+        
+        <div class="chatbot-input hidden" id="chatbotInput">
+            <input type="text" placeholder="Type your message..." id="messageInput" onkeypress="handleEnterKey(event)">
+            <button class="send-btn" onclick="sendMessage()" id="sendBtn">
+                <span style="font-size: 14px;">➤</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- OAuth Modal -->
+    <div class="oauth-modal" id="oauthModal">
+        <div class="oauth-content">
+            <div class="oauth-header">
+                <h2>Azure Active Directory</h2>
+                <p>Sign in to your account</p>
+            </div>
+            <form class="oauth-form" onsubmit="handleOAuthSubmit(event)">
+                <div class="form-group">
+                    <label for="email">Email address</label>
+                    <input type="email" id="email" name="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" required>
+                </div>
+                <button type="submit" class="oauth-submit">Sign in</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let isAuthenticated = false;
+        let isMaximized = false;
+        let isProcessing = false;
+
+        function toggleChatbot() {
+            const container = document.getElementById('chatbotContainer');
+            if (container.style.display === 'none' || !container.style.display) {
+                container.style.display = 'flex';
+            } else {
+                container.style.display = 'none';
+            }
+        }
+
+        function closeChatbot() {
+            document.getElementById('chatbotContainer').style.display = 'none';
+        }
+
+        function maximizeChatbot() {
+            const container = document.getElementById('chatbotContainer');
+            isMaximized = !isMaximized;
+            
+            if (isMaximized) {
+                container.classList.add('maximized');
+            } else {
+                container.classList.remove('maximized');
+            }
+        }
+
+        function showOAuthModal() {
+            document.getElementById('oauthModal').style.display = 'flex';
+        }
+
+        function handleOAuthSubmit(event) {
+            event.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            if (!email || !password) {
+                alert('Please enter both email and password');
+                return;
+            }
+            
+            // Simulate OAuth process
+            const submitBtn = event.target.querySelector('.oauth-submit');
+            submitBtn.textContent = 'Signing in...';
+            submitBtn.disabled = true;
+            
+            setTimeout(() => {
+                document.getElementById('oauthModal').style.display = 'none';
+                submitBtn.textContent = 'Sign in';
+                submitBtn.disabled = false;
+                // Clear form
+                document.getElementById('email').value = '';
+                document.getElementById('password').value = '';
+                authenticateUser();
+            }, 1500);
+        }
+
+        function authenticateUser() {
+            isAuthenticated = true;
+            const messagesContainer = document.getElementById('chatbotMessages');
+            const inputContainer = document.getElementById('chatbotInput');
+            const authMessage = document.getElementById('authMessage');
+            
+            authMessage.style.display = 'none';
+            inputContainer.classList.remove('hidden');
+            
+            // Add welcome message
+            addMessage('bot', 'Great! Your mailbox has been successfully authenticated. I can now help you with your emails. What can I assist you with today?');
+        }
+
+        function handleEnterKey(event) {
+            if (event.key === 'Enter' && !isProcessing) {
+                sendMessage();
+            }
+        }
+
+        function sendMessage() {
+            if (isProcessing) return;
+            
+            const input = document.getElementById('messageInput');
+            const message = input.value.trim();
+            
+            if (!message) return;
+            
+            addMessage('user', message);
+            input.value = '';
+            
+            isProcessing = true;
+            document.getElementById('sendBtn').disabled = true;
+            
+            // Start processing simulation
+            simulateProcessing();
+        }
+
+        function addMessage(type, content, isTyping = false) {
+            const messagesContainer = document.getElementById('chatbotMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}`;
+            
+            if (isTyping) {
+                messageDiv.innerHTML = `
+                    <div class="typing-indicator">
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                    </div>
+                `;
+            } else {
+                messageDiv.textContent = content;
+            }
+            
+            messagesContainer.appendChild(messageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            
+            return messageDiv;
+        }
+
+        function addStatusMessage(text) {
+            const messagesContainer = document.getElementById('chatbotMessages');
+            const statusDiv = document.createElement('div');
+            statusDiv.className = 'status-message';
+            statusDiv.textContent = text;
+            messagesContainer.appendChild(statusDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            return statusDiv;
+        }
+
+        function simulateProcessing() {
+            const stages = [
+                { text: 'prompting', duration: 1500 },
+                { text: 'retrieving relevant emails', duration: 2000 },
+                { text: 'generating response', duration: 1800 }
+            ];
+            
+            let currentStage = 0;
+            let statusElement = null;
+            
+            function processNextStage() {
+                if (currentStage < stages.length) {
+                    const stage = stages[currentStage];
+                    
+                    // Remove previous status if exists
+                    if (statusElement) {
+                        statusElement.remove();
+                    }
+                    
+                    statusElement = addStatusMessage(stage.text);
+                    
+                    setTimeout(() => {
+                        currentStage++;
+                        processNextStage();
+                    }, stage.duration);
+                } else {
+                    // Remove final status message
+                    if (statusElement) {
+                        statusElement.remove();
+                    }
+                    
+                    // Start streaming response
+                    streamResponse();
+                }
+            }
+            
+            processNextStage();
+        }
+
+        function streamResponse() {
+            const responses = [
+                "I've analyzed your recent emails and found several important items that need your attention. Based on the patterns in your communication, I can see you've been dealing with project updates from your team.",
+                "Looking at your email history, I notice you have 3 high-priority messages from clients waiting for responses. The most urgent one appears to be from Johnson & Co regarding the quarterly review meeting.",
+                "I've processed your inbox and identified several action items. There are 2 contract renewals due next week, and you have follow-up emails from last week's conference that could lead to new business opportunities.",
+                "After reviewing your correspondence patterns, I can help you draft responses for the pending client inquiries. I've also noticed some emails that can be automatically categorized to save you time in the future."
+            ];
+            
+            const randomResponse = responses[Math.floor(Math.random() * responses.length)];
+            const messageElement = addMessage('bot', '');
+            
+            let index = 0;
+            const typingSpeed = 50; // milliseconds between characters
+            
+            function typeNextCharacter() {
+                if (index < randomResponse.length) {
+                    messageElement.textContent = randomResponse.substring(0, index + 1) + '|';
+                    index++;
+                    setTimeout(typeNextCharacter, typingSpeed);
+                } else {
+                    // Remove cursor and enable input
+                    messageElement.textContent = randomResponse;
+                    isProcessing = false;
+                    document.getElementById('sendBtn').disabled = false;
+                }
+            }
+            
+            typeNextCharacter();
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            // Auto-open chatbot after 3 seconds for demo purposes
+            setTimeout(() => {
+                if (document.getElementById('chatbotContainer').style.display !== 'flex') {
+                    toggleChatbot();
+                }
+            }, 3000);
+        });
+    </script>
+</body>
+</html>
